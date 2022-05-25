@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="boardAdvanceMapper">
+
+	<!-- 게시글의 개수를 반환하는 쿼리 -->
+	<select id="getAllBoardCount" resultType="int">
+		<choose>
+			<when test="searchKeyword.equals('total')"> <!-- searchKeyword가 전체검색일 경우 -->
+				<choose>
+					<when test="searchWord.equals('')"> <!--  특정 키워드가 없을경우 (보통의 경우)  -->
+						SELECT 
+								COUNT(*) 
+						FROM 
+								T_SPRING_BOARD_ADVANCE
+					</when>
+					<otherwise>	<!-- 특정 키워드가 있을 경우 -->
+						SELECT 
+								COUNT(*) 
+						FROM 
+								T_SPRING_BOARD_ADVANCE
+						WHERE
+								SUBJECT LIKE CONCAT('%',#{searchWord},'%') OR 
+								WRITER LIKE CONCAT('%',#{searchWord},'%')
+					</otherwise>
+				</choose>
+			</when>
+			<otherwise>	<!-- searchKeyword가 전체 검색이 아닐 경우 -->
+				SELECT 
+						COUNT(*) 
+				FROM 
+						T_SPRING_BOARD_ADVANCE 
+				WHERE
+					<if test="searchKeyword.equals('writer')">
+						WRITER LIKE CONCAT('%' , #{searchWord} , '%')
+					</if>
+					<if test="searchKeyword.equals('subject')">
+						SUBJECT LIKE CONCAT('%' , #{searchWord} , '%')
+					</if>
+			</otherwise>
+		</choose>	
+	</select>
+
+	<!-- 게시글의 내용을 반환하는 쿼리 -->
+	<select id="getSearchBoard" resultType="BoardAdvanceDto">
+		<choose>
+			<when test="searchKeyword.equals('total')">	<!-- 전체 검색일 경우 -->
+				<choose>
+					<when test="searchWord.equals('')">	<!-- 전체 검색중 검색 문자가 없을 경우 -->
+						SELECT
+								*
+						FROM
+								T_SPRING_BOARD_ADVANCE
+						ORDER BY
+								REF DESC,
+								RE_STEP 
+						LIMIT 
+								#{startBoardIdx} , #{onePageViewCount}
+					</when>
+					<otherwise>	<!-- 전체 검색중 검색 문자가 있을 경우 -->
+						SELECT 
+								*
+						FROM
+								T_SPRING_BOARD_ADVANCE
+						WHERE
+								SUBJECT LIKE CONCAT('%' , #{searchWord} , '%') OR
+								WRITER LIKE CONCAT('%' , #{searchWord} , '%')
+						ORDER BY
+								REF DESC,
+								RE_STEP  
+						LIMIT 
+								#{startBoardIdx},#{onePageViewCount}
+					</otherwise>
+				</choose>
+			</when>
+			<otherwise>	<!-- 서치 키워드를 이용하여 검색하는 경우 -->
+				SELECT
+						*
+				FROM
+						T_SPRING_BOARD_ADVANCE
+				WHERE
+					<if test="searchKeyword.equals('writer')">
+						WRITER LIKE CONCAT('%' , #{searchWord} , '%')
+					</if>
+					<if test="searchKeyword.equals('subject')">
+						SUBJECT LIKE CONCAT('%' , #{searchWord} , '%')
+					</if>
+				ORDER BY
+						REF DESC,
+						RE_STEP 
+				LIMIT
+						#{startBoardIdx} , #{onePageViewCount}
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 게시글을 저장하는 쿼리 -->
+	<insert id="insertBoard">
+		INSERT INTO 
+				T_SPRING_BOARD_ADVANCE 
+		VALUES (
+				(SELECT 
+						IFNULL(MAX(NUM) + 1 , 1)
+				FROM 
+						T_SPRING_BOARD_ADVANCE AS B), 
+				#{writer}, 
+				#{email}, 
+				#{subject}, 
+				#{password}, 
+				now(),
+				(SELECT 
+						IFNULL(MAX(REF) + 1 , 1) 
+				FROM 
+						T_SPRING_BOARD_ADVANCE AS B),
+				1, 
+				1, 
+				0, 
+				#{content})
+	</insert>
+
+	<!-- 하나의 게시글을 반환하는 쿼리 -->
+	<select id="getOneBoard" resultType="BoardAdvanceDto">
+		SELECT
+				*
+		FROM
+				T_SPRING_BOARD_ADVANCE
+		WHERE
+				NUM = #{num}
+	</select>
+ 
+ 	<!-- 하나의 게시글을 수정하는 쿼리 -->
+	<update id="updateBoard">
+		UPDATE 
+				T_SPRING_BOARD_ADVANCE 
+		SET 
+				SUBJECT = #{subject}, 
+				CONTENT = #{content} 
+		WHERE 
+				NUM = #{num}
+	</update>
+
+	<!-- 스탭을 옮려주는 쿼리 -->
+	<update id="updateBoardReplyStep">
+		<![CDATA[
+			UPDATE 
+					T_SPRING_BOARD_ADVANCE 
+			SET 
+					RE_STEP = RE_STEP+1
+			WHERE 
+					REF = #{ref} AND RE_STEP > #{reStep}
+		]]>
+	</update>
+	
+	<!-- 게시글을 삭제하는 쿼리 -->
+	<delete id="deleteBoard">
+		DELETE FROM 
+				T_SPRING_BOARD_ADVANCE 
+		WHERE 
+				NUM = #{num}
+	</delete>
+	
+	<!-- 게시글의 비밀번호를 검증하는 쿼리 -->
+	<select id="validateUserCheck" resultType="BoardAdvanceDto">
+		SELECT
+				*
+		FROM
+				T_SPRING_BOARD_ADVANCE
+		WHERE
+				NUM = #{num} AND PASSWORD = #{password} 
+	</select>
+	
+	<!-- 게시글 조회시 조회수가 1증가하는 쿼리 -->
+	<update id="increaseReadCount">
+		UPDATE
+				T_SPRING_BOARD_ADVANCE
+		SET
+				READ_COUNT = READ_COUNT + 1
+		WHERE
+				NUM=#{num}
+	</update>
+	
+	<!-- 댓글을 등록하는 쿼리 -->
+	<insert id="insertReplyBoard">
+		INSERT INTO 
+				T_SPRING_BOARD_ADVANCE
+		VALUES (
+				(SELECT 
+					MAX(NUM) + 1 
+				FROM 
+					T_SPRING_BOARD_ADVANCE AS B),
+			    #{writer},
+			    #{email},
+			    #{subject},
+			    #{password},
+			    now(),
+			    #{ref},
+			    #{reStep} + 1,
+			    #{reLevel} + 1,
+			    0,
+			    #{content})
+	</insert>
+	
+	<!-- 페이징 테스트를 위한 더미데이터 생성 쿼리 -->
+	<insert id="makeDummyData">
+			INSERT INTO 
+					T_SPRING_BOARD_ADVANCE 
+			VALUES
+			<foreach collection="list" item="bdto" separator=",">
+					(
+						#{bdto.num},
+						#{bdto.writer}, 
+						#{bdto.email}, 
+						#{bdto.subject}, 
+						#{bdto.password}, 
+						now(), 
+						#{bdto.ref}, 
+						#{bdto.reStep}, 
+						#{bdto.reLevel}, 
+						#{bdto.readCount},
+						#{bdto.content}
+					)
+			</foreach>
+	</insert>
+	
+ </mapper>

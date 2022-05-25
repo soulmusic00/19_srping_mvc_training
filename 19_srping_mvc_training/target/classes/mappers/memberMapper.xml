@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.member">
+
+	<select id="duplicatedMemberCheck" parameterType="String" resultType="MemberDto"> 
+		SELECT 
+				*
+		FROM
+				T_SPRING_MEMBER
+		WHERE
+				MEMBER_ID = #{memberID}
+	</select>
+
+	<insert id="joinMember" parameterType="MemberDto">
+		INSERT INTO 
+				T_SPRING_MEMBER 
+		VALUES (
+				#{memberId},
+				#{memberPw},
+				#{memberName},
+				#{memberGender},
+				#{memberBirthY},
+				#{memberBirthM},
+				#{memberBirthD},
+				#{memberBirthGn},
+				#{hp1},
+				#{hp2},
+				#{hp3},
+				#{smsstsYn},
+				#{email},
+				#{emailstsYn},
+				#{zipcode},
+				#{roadAddress},
+				#{jibunAddress},
+				#{namujiAddress},
+				NOW(),
+				#{etc}
+		 )
+	</insert>	
+	
+	<select id="loginMember" parameterType="String" resultType="MemberDto">
+		SELECT
+				*
+		FROM
+				T_SPRING_MEMBER
+		WHERE
+				MEMBER_ID = #{memberId}
+	</select>
+	
+	<select id="showAllMember" resultType="MemberDto">
+		SELECT
+				*
+		FROM
+				T_SPRING_MEMBER
+	</select>
+	
+	<select id="showOneMember"  parameterType="String" resultType="MemberDto">
+		SELECT
+				*
+		FROM
+				T_SPRING_MEMBER
+		WHERE
+				MEMBER_ID = #{memberId}
+	</select>
+	
+	<update id="updateMember" parameterType="MemberDto">
+		UPDATE
+				T_SPRING_MEMBER
+		<set>
+			<if test='memberName != null and !memberName.equals("")'>
+				MEMBER_NAME = #{memberName},
+			</if>
+			<if test='memberGender != null and !memberGender.equals("")'>
+				MEMBER_GENDER = #{memberGender}, 
+			</if>
+			<if test='memberBirthY != null and !memberBirthY.equals("")'>
+				MEMBER_BIRTH_Y = #{memberBirthY}, 
+			</if>
+			<if test='memberBirthM != null and !memberBirthM.equals("")'>
+				MEMBER_BIRTH_M = #{memberBirthM}, 
+			</if>
+			<if test='memberBirthD != null and !memberBirthD.equals("")'>
+				MEMBER_BIRTH_D = #{memberBirthD}, 
+			</if>
+			<if test='memberBirthGn != null and !memberBirthGn.equals("")'>
+				MEMBER_BIRTH_GN = #{memberBirthGn},  
+			</if>
+			<if test='hp1 != null and !hp1.equals("")'>
+				HP1 = #{hp1},  
+			</if>
+			<if test='hp2 != null and !hp2.equals("")'>
+				HP2 = #{hp2},  
+			</if>
+			<if test='hp3 != null and !hp3.equals("")'>
+				HP3 = #{hp3},  
+			</if>
+			<if test='smsstsYn != null and !smsstsYn.equals("")'>
+				SMSSTS_YN = #{smsstsYn},  
+			</if>
+			<if test='email != null and !email.equals("")'>
+				EMAIL = #{email}, 
+			</if>
+			<if test='emailstsYn != null and !emailstsYn.equals("")'>
+				EMAILSTS_YN = #{emailstsYn},  
+			</if>
+			<if test='zipcode != null and !zipcode.equals("")'>
+				ZIPCODE = #{zipcode},  
+			</if>
+			<if test='roadAddress != null and !roadAddress.equals("")'>
+				ROADADDRESS = #{roadAddress},
+			</if>
+			<if test='jibunAddress != null and !jibunAddress.equals("")'>
+				JIBUNADDRESS = #{jibunAddress},  
+			</if>
+			<if test='namujiAddress != null and !namujiAddress.equals("")'>
+				NAMUJIADDRESS = #{namujiAddress},  
+			</if>
+			<if test='etc != null and !etc.equals("")'>
+				ETC = #{etc} , 
+			</if>
+		</set>
+		WHERE
+				MEMBER_ID = #{memberId}
+	</update>	
+
+	<delete id="deleteMember" parameterType="String">
+		DELETE FROM
+				T_SPRING_MEMBER
+		WHERE
+				MEMBER_ID = #{memberId}
+	</delete>
+
+</mapper>
